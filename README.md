@@ -2,7 +2,7 @@
 ----
 
 Sample Image  
-<center><img src="/image/image01.png" width="80%"></center>  
+<center><img src="/image/image01.png" width="40%"></center>  
 
 ## Overview  
 Author: Youyoung Jang  
