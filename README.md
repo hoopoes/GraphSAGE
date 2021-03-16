@@ -1,8 +1,7 @@
 # PairSAGE
 ----
 
-Sample Image  
-<center><img src="/image/image01.png" width="40%"></center>  
+<center><img src="/image/main_img.JPG" width="70%"></center>  
 
 ## Overview  
 Author: Youyoung Jang  
@@ -18,6 +17,17 @@ So User node and Item node must be trained separately with different weight matr
 
 **Pair** in PairSAGE is inserted to stress the importance of **Pair** relationship between User and Item.  
 This project can be used for common recommendation system. If features are diverse and new nodes are added frequently this project might be helpful to you.  
+
+----
+
+## Structure  
+still developing...  
+
+----
+
+## Tutorial  
+
+
 
 ----
 

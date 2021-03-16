@@ -6,8 +6,35 @@ import tensorflow as tf
 from tensorflow.keras.layers import Layer
 from tensorflow.keras import backend as K
 from tensorflow.keras import activations
-from typing import List, Callable, Tuple, Dict, Union, AnyStr
 
+import collections
+from collections import namedtuple
+from typing import List, Callable, Tuple, Dict, Union, AnyStr
+import random as rn
+import numpy.random as np_rn
+
+# 1) random_state, is_real_iterable
+RandomState = namedtuple("RandomState", "random, numpy")
+
+def _global_state():
+    return RandomState(rn, np_rn)
+
+def _seeded_state(s):
+    return RandomState(rn.Random(s), np_rn.RandomState(s))
+
+_rs = _global_state()
+
+def random_state(seed):
+    if seed is None:
+        return _rs
+    else:
+        return _seeded_state(seed)
+
+def is_real_iterable(x):
+    # 문자열, 바이트가 아니면서 순회 가능한 객체인지 확인
+    return isinstance(x, collections.abc.Iterable) and not isinstance(x, (str, bytes))
+
+# 2) Aggregator
 class Aggregator(Layer):
     def __init__(
             self,
@@ -91,4 +118,7 @@ class Aggregator(Layer):
         aggregated_vectors = self.activations(
             (aggregated_vectors + self.bias) if self.has_bias else aggregated_vectors)
         return aggregated_vectors
+
+
+
 
