@@ -2,10 +2,10 @@
 # 3) UniformRandomWalk, UnsupervisedSampler
 import numpy as np
 # from stellargraph.data.explorer import UniformRandomWalk
+from utils import is_real_iterable, random_state
 from randomwalk import UniformRandomWalk
 
 from stellargraph.core.graph import StellarGraph
-
 
 
 def _warn_if_ignored(value, default, name):
@@ -17,37 +17,22 @@ def _warn_if_ignored(value, default, name):
 
 class UnsupervisedSampler:
     """
-        The UnsupervisedSampler is responsible for sampling walks in the given graph
-        and returning positive and negative samples w.r.t. those walks, on demand.
+    Default Walker: UniformRandomWalk
 
-        The positive samples are all the (target, context) pairs from the walks and the negative
-        samples are contexts generated for each target based on a sampling distribution.
+    The UnsupervisedSampler is responsible for sampling walks in the given graph
+    and returning positive and negative samples w.r.t. those walks, on demand.
 
-        By default, a UniformRandomWalk is used, but a custom `walker` can be specified instead. An
-        error will be raised if other parameters are specified along with a custom `walker`.
+    The positive samples are all the (target, context) pairs from the walks.
+    Negative samples are contexts generated for each target based on a sampling distribution.
 
-        .. seealso::
-
-           Examples using this sampler:
-
-           - Attri2Vec: `node classification <https://stellargraph.readthedocs.io/en/stable/demos/node-classification/attri2vec-node-classification.html>`__ `link prediction <https://stellargraph.readthedocs.io/en/stable/demos/link-prediction/attri2vec-link-prediction.html>`__, `unsupervised representation learning <https://stellargraph.readthedocs.io/en/stable/demos/embeddings/attri2vec-embeddings.html>`__
-           - GraphSAGE: `unsupervised representation learning <https://stellargraph.readthedocs.io/en/stable/demos/embeddings/graphsage-unsupervised-sampler-embeddings.html>`__
-           - Node2Vec: `node classification <https://stellargraph.readthedocs.io/en/stable/demos/node-classification/keras-node2vec-node-classification.html>`__, `unsupervised representation learning <https://stellargraph.readthedocs.io/en/stable/demos/embeddings/keras-node2vec-embeddings.html>`__
-           - `comparison of link prediction algorithms <https://stellargraph.readthedocs.io/en/stable/demos/link-prediction/homogeneous-comparison-link-prediction.html>`__
-
-           Built-in classes for ``walker``: :class:`.UniformRandomWalk`, :class:`.BiasedRandomWalk`, :class:`.UniformRandomMetaPathWalk`.
-
-        Args:
-            G (StellarGraph): A stellargraph with features.
-            nodes (iterable, optional) The root nodes from which individual walks start.
-                If not provided, all nodes in the graph are used.
-            length (int): Length of the walks for the default UniformRandomWalk walker. Length must
-                be at least 2.
-            number_of_walks (int): Number of walks from each root node for the default
-                UniformRandomWalk walker.
-            seed (int, optional): Random seed for the default UniformRandomWalk walker.
-            walker (RandomWalk, optional): A RandomWalk object to use instead of the default
-                UniformRandomWalk walker.
+    Args:
+        G (StellarGraph): A stellargraph with features.
+        nodes (iterable, optional) The root nodes from which individual walks start.
+            If not provided, all nodes in the graph are used.
+        length (int): Length of the walks for the default UniformRandomWalk walker. Length >= 2
+        number_of_walks (int): Number of walks from each root node for the default UniformRandomWalk walker.
+        seed (int, optional): Random seed for the default UniformRandomWalk walker.
+        walker (RandomWalk, optional): A RandomWalk object to use instead of the default UniformRandomWalk walker.
     """
 
     def __init__(
@@ -56,9 +41,7 @@ class UnsupervisedSampler:
         if not isinstance(G, StellarGraph):
             raise ValueError(
                 "({}) Graph must be a StellarGraph or StellarDigraph object.".format(
-                    type(self).__name__
-                )
-            )
+                    type(self).__name__))
         else:
             self.graph = G
 
@@ -69,9 +52,7 @@ class UnsupervisedSampler:
             _warn_if_ignored(seed, None, "seed")
             self.walker = walker
         else:
-            self.walker = UniformRandomWalk(
-                G, n=number_of_walks, length=length, seed=seed
-            )
+            self.walker = UniformRandomWalk(G, n=number_of_walks, length=length, seed=seed)
 
         # Define the root nodes for the walks
         # if no root nodes are provided for sampling defaulting to using all nodes as root nodes.
@@ -82,22 +63,18 @@ class UnsupervisedSampler:
         else:
             raise ValueError("nodes parameter should be an iterable of node IDs.")
 
-        # Require walks of at lease length two because to create a sample pair we need at least two nodes.
+        # 아래는 length >= 2, number_ofr_walks >= 1 인지 확인하는 부분
         if length < 2:
             raise ValueError(
                 "({}) For generating (target,context) samples, walk length has to be at least 2".format(
-                    type(self).__name__
-                )
-            )
+                    type(self).__name__))
         else:
             self.length = length
 
         if number_of_walks < 1:
             raise ValueError(
                 "({}) At least 1 walk from each head node has to be done".format(
-                    type(self).__name__
-                )
-            )
+                    type(self).__name__))
         else:
             self.number_of_walks = number_of_walks
 
@@ -117,8 +94,7 @@ class UnsupervisedSampler:
         (https://snap.stanford.edu/node2vec/).
 
         Args:
-             batch_size (int): The number of samples to generate for each batch.
-                This must be an even number.
+             batch_size (int): The number of samples to generate for each batch. 짝수여야 함
 
         Returns:
             List of batches, where each batch is a tuple of (list context pairs, list of labels)
@@ -127,7 +103,9 @@ class UnsupervisedSampler:
 
         all_nodes = list(self.graph.nodes(use_ilocs=True))
         # Use the sampling distribution as per node2vec
+        # degrees: dafaultdict, {0: 452, 1: 131, ..., 2624: 164}
         degrees = self.graph.node_degrees(use_ilocs=True)
+
         sampling_distribution = np.array([degrees[n] ** 0.75 for n in all_nodes])
         sampling_distribution_norm = sampling_distribution / np.sum(
             sampling_distribution
@@ -137,7 +115,8 @@ class UnsupervisedSampler:
 
         # first item in each walk is the target/head node
         targets = [walk[0] for walk in walks]
-
+        # walks -> positive_pairs: list of lists -> np.array
+        # 형태: [['m_1', 'u_597'], ['u_941', 'm_298']]
         positive_pairs = np.array(
             [
                 (target, positive_context)
@@ -146,6 +125,7 @@ class UnsupervisedSampler:
             ]
         )
 
+        # 형태: [[0, 2278], [2624, 594]]
         positive_pairs = self.graph.node_ids_to_ilocs(positive_pairs.flatten()).reshape(
             positive_pairs.shape
         )
@@ -156,6 +136,7 @@ class UnsupervisedSampler:
 
         negative_pairs = np.column_stack((positive_pairs[:, 0], negative_samples))
 
+        # pairs: (len(nodes)*2, 2)
         pairs = np.concatenate((positive_pairs, negative_pairs), axis=0)
         labels = np.repeat([1, 0], len(positive_pairs))
 
@@ -210,6 +191,4 @@ class UnsupervisedSampler:
                     type(self).__name__
                 )
             )
-
-
 
