@@ -1,5 +1,11 @@
+# Components of Generator
+# 1) RandomWalk, UniformRandomWalk
+# 2) UnsupervisedSampler
+# 3) LinkSequence, OnDemandLinkSequence
 
-# 3) UniformRandomWalk, UnsupervisedSampler
+# UniformRandomWalk, UnsupervisedSampler: LinkSequence 정의를 위해 필요함
+
+
 import numpy as np
 # from stellargraph.data.explorer import UniformRandomWalk
 from utils import is_real_iterable, random_state

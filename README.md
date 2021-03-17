@@ -23,6 +23,14 @@ This project can be used for common recommendation system. If features are diver
 ## Structure  
 still developing...  
 
+**Base Components**  
+1) RandomWalk, UniformRandomWalk  
+2) GraphWalk, SampledHeterogeneousBreadthFirstWalk 
+3) UnsupervisedSampler  
+4) LinkSequence, OndemandLinkSequence  
+5) BatchedLinkGenerator, HinSAGELinkGenerator  
+
+
 ----
 
 ## Tutorial  

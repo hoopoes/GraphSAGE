@@ -57,6 +57,8 @@ class Aggregator(Layer):
         self.bias = None
         assert self.agg_option in ['mean', 'max'], "agg_option must be mean or max"
 
+        super().__init__(**kwargs)
+
     def __repr__(self):
         name = "Mean Aggregator with output_dim {}".format(self.output_dim)
         return name
@@ -88,7 +90,7 @@ class Aggregator(Layer):
                 initializer="zeros",
                 trainable=True)
 
-        super().__build__()
+        super().build(input_shape)
 
     def call(self, x, **kwargs):
         """
