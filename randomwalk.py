@@ -399,7 +399,7 @@ class SampledHeterogeneousBreadthFirstWalk(GraphWalk):
                         # Find edge types for current node type
                         current_edge_types = self.graph_schema.schema[current_node_type]
 
-                        # Create samples of neigbhours for all edge types
+                        # Create samples of neighbours for all edge types
                         for et in current_edge_types:
                             neigh_et = adj[et][current_node]
 
