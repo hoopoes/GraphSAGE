@@ -188,4 +188,35 @@ def extract_element_features(element_data, unique, name, ids, type, use_ilocs):
     return features
 
 
+# from stellargraph.core.validation import comma_sep, separated
+def separated(values, *, limit, stringify, sep):
+    """
+    Print up to ``limit`` values with a separator.
 
+    Args:
+        values (list): the values to print
+        limit (optional, int): the maximum number of values to print (None for no limit)
+        stringify (callable): a function to use to convert values to strings
+        sep (str): the separator to use between elements (and the "... (NNN more)" continuation)
+    """
+    count = len(values)
+    if limit is not None and count > limit:
+        values = values[:limit]
+        continuation = f"{sep}... ({count - limit} more)" if count > limit else ""
+    else:
+        continuation = ""
+
+    rendered = sep.join(stringify(x) for x in values)
+    return rendered + continuation
+
+
+def comma_sep(values, limit=20, stringify=repr):
+    """
+    Print up to ``limit`` values, comma separated.
+
+    Args:
+        values (list): the values to print
+        limit (optional, int): the maximum number of values to print (None for no limit)
+        stringify (callable): a function to use to convert values to strings
+    """
+    return separated(values, limit=limit, stringify=stringify, sep=", ")

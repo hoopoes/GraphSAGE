@@ -49,14 +49,15 @@ import numpy as np
 import scipy.sparse as sps
 import warnings
 
-from utils import is_real_iterable, extract_element_features
+from utils import is_real_iterable, extract_element_features, comma_sep, separated
 
 from stellargraph import globalvar
+
 from stellargraph.core.schema import GraphSchema, EdgeType
 from stellargraph.core.element_data import NodeData, EdgeData, ExternalIdIndex
-from stellargraph.core.validation import comma_sep, separated
 from stellargraph.core import convert
 
+NeighbourWithWeight = namedtuple("NeighbourWithWeight", ["node", "weight"])
 
 class StellarGraph:
     def __init__(
@@ -64,7 +65,6 @@ class StellarGraph:
         nodes=None,
         edges=None,
         *,
-        is_directed=False,
         source_column=globalvar.SOURCE,
         target_column=globalvar.TARGET,
         edge_weight_column=globalvar.WEIGHT,
@@ -83,8 +83,6 @@ class StellarGraph:
 
         if edges is None:
             edges = {}
-
-        self._is_directed = is_directed
 
         nodes_is_internal = isinstance(nodes, NodeData)
         edges_is_internal = isinstance(edges, EdgeData)
