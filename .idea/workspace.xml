@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="71a0e547-4108-4707-97e8-b43f66f2d96f" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/graphsage.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/graphsage.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="71a0e547-4108-4707-97e8-b43f66f2d96f" name="Default Changelist" comment="1">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exp1_graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/exp1_graph.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/exp2_sampler.py" beforeDir="false" afterPath="$PROJECT_DIR$/exp2_sampler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/randomwalk.py" beforeDir="false" afterPath="$PROJECT_DIR$/randomwalk.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

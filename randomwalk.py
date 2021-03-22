@@ -141,7 +141,7 @@ graph_schema = G.create_graph_schema(nodes)
 
 # n: number of walks -> 각 node 별로 몇 번 walk를 만들 것인가
 # length: walk의 길이
-# 조건: n >= 1, lengh >= 2
+# 조건: n >= 1, length >= 2
 walker = UniformRandomWalk(G, n=32, length=8, seed=0)
 walks = walker.run(nodes, n=3, length=3, seed=0)
 
