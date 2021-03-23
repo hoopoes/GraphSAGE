@@ -43,6 +43,8 @@ num_samples = [8, 4]
 generator = HinSAGELinkGenerator(
     G, batch_size, num_samples, head_node_types=["user", "movie"]
 )
+
+# edge_list_train[0] = link_ids[0] = Pandas(user_id='u_630', movie_id='m_832')
 train_gen = generator.flow(edgelist_train, labels_train, shuffle=True)
 test_gen = generator.flow(edgelist_test, labels_test)
 

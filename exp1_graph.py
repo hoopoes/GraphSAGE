@@ -7,18 +7,30 @@ from collections import Iterable
 from stellargraph.core.indexed_array import IndexedArray
 # torch_geometric.data.Data
 
+# node_id: 'user_0'
+# node_index: 0
+
 users = np.array([[-1], [4]])
 items = np.array([[0.4, 100], [0.1, 200], [0.9, 300]])
 node_features = {'user': users, 'item': items}
-edges = np.array([[0, 0, 0, 1, 1, 2, 3, 3, 4, 4],
-                  [2, 3, 4, 3, 4, 0, 0, 1, 0, 1]])
+#edges = np.array([[0, 0, 0, 1, 1, 2, 3, 3, 4, 4],
+#                  [2, 3, 4, 3, 4, 0, 0, 1, 0, 1]])
+edges = np.array([['user_0', 'user_0', 'user_0', 'user_1', 'user_1',
+                   'item_0', 'item_1', 'item_2', 'item_1', 'item_2'],
+                  ['item_0', 'item_1', 'item_2', 'item_1', 'item_2',
+                   'user_0', 'user_0', 'user_0', 'user_1', 'user_1']])
 node_dict = {'user_0': 0, 'user_1': 1, 'item_0': 2, 'item_1': 3, 'item_2': 4}
+
+df = pd.DataFrame(edges.T).rename({0: 'user', 1: 'item'}, axis=1).head(5)
+df['score'] = [1, 0, 0, 1, 0]
+train = list(df[["user", "item"]].itertuples(index=False))
 
 class Graph(object):
     def __init__(self, node_features: Dict=None, edges=None, node_dict=None):
         self.node_features = node_features    # dict
         self.edges = edges
         self.node_dict = node_dict
+        self.reverse_node_dict = {val: key for key, val in node_dict.items()}
 
         self.neighbor_dict  = self.get_neighbor_dict()
 
@@ -42,14 +54,12 @@ class Graph(object):
         return neighbor_dict
 
     def get_neighbors_from_node(self, node: Union[int, str]) -> list:
-        if type(node) == str:
-            node = self.node_dict[node]
+        if type(node) == int:
+            node = self.reverse_node_dict[node] # node: 'user_0'
         neighbors = self.neighbor_dict[node]
         return neighbors
 
     def get_node_type(self, nodes: Union[int, str]) -> list:
-        node_dict = self.node_dict
-
         # 기본 Input: ['user_1']
         if not isinstance(nodes, list):
             nodes = [nodes]
@@ -57,8 +67,8 @@ class Graph(object):
             self.check_node_existence(nodes)
             node_types = [node.split('_')[0] for node in nodes]
         else:
-            reverse_node_dict = {val: key for key, val in node_dict.items()}
-            nodes = [reverse_node_dict[node] for node in nodes]
+            nodes = [self.reverse_node_dict[node] for node in nodes]
+            self.check_node_existence(nodes)
             node_types = [node.split('_')[0] for node in nodes]
         return node_types
 
@@ -66,6 +76,16 @@ class Graph(object):
         existing_nodes = [node for node in nodes if node in list(self.node_dict.keys())]
         if len(nodes) != len(existing_nodes):
             raise KeyError("Some of nodes do not exist")
+
+    def get_node_features_from_node(self, node_ids: list, node_type: str):
+        # node_ids = ['user_0', 'user_1'], node_type = 'user'
+        if node_type == 'user':
+            node_indices = [self.node_dict[node_id] for node_id in node_ids]
+        else:
+            correction_constant = self.node_features['user'].shape[0]
+            node_indices = [self.node_dict[node_id] - correction_constant for node_id in node_ids]
+        features = self.node_features[node_type][node_indices, :]
+        return features
 
     @property
     def num_nodes(self):
@@ -89,8 +109,5 @@ class Graph(object):
 
 
 graph = Graph(node_features=node_features, edges=edges, node_dict=node_dict)
-
-
-
 
 

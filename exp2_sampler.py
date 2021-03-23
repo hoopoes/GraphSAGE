@@ -29,7 +29,7 @@ class Sampler:
         num_of_walks = self.num_of_walks
 
         walks = []
-        # ex) nodes = [0, 3, 13]
+        # ex) nodes = ['user_0', 'user_31']
 
         for node in nodes:    # iterate over root nodes
             queue = []        # the queue of neighbours
@@ -74,7 +74,7 @@ class Sampler:
 
 
 sampler = Sampler(Graph=graph, num_of_walks=num_of_walks)
-nodes = [0, 1, 1, 0]
+nodes = ['user_0', 'user_1', 'user_1', 'user_0']
 walks = sampler.run_breadth_first_walk(nodes=nodes)
 
 
