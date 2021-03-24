@@ -2,17 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="71a0e547-4108-4707-97e8-b43f66f2d96f" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/graphsage.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/graphsage.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exp1_graph.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exp2_sampler.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/exp3_generator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bipartite_graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/bipartite_graph.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/generator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/randomwalk.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sampler.py" beforeDir="false" afterPath="$PROJECT_DIR$/sampler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sequence.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/stellargraph_components/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/stellargraph_components/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/stellargraph_components/utils.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/understanding_graph.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,7 +64,7 @@
       </list>
     </option>
   </component>
-  <component name="SpellCheckerSettings" BundledDictionaries="0" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" Dictionaries="0" CorrectionsLimit="5" DefaultDictionary="application-level" UseSingleDictionary="true" />
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -85,18 +83,11 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="COLUMN_ORDER" />
-            </State>
+            <State />
           </value>
         </entry>
       </map>
     </option>
-  </component>
-  <component name="WindowStateProjectService">
-    <state x="461" y="182" key="SettingsEditor" timestamp="1616460432867">
-      <screen x="0" y="0" width="1920" height="1080" />
-    </state>
-    <state x="461" y="182" key="SettingsEditor/0.0.1920.1080@0.0.1920.1080" timestamp="1616460432867" />
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
 </project>

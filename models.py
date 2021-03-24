@@ -96,13 +96,16 @@ class PairSAGE:
             for layer in range(self.n_layers)
         ]
 
+    def __repr__(self):
+        identity = "<PairSAGE model with {} layers>".format(self.n_layers)
+        return identity
+
     def _get_sizes_from_generator(self, generator):
+        self.input_dims = generator.graph.node_feature_sizes    # dict
         self.n_samples = generator.num_samples
-        self.subtree_schema = generator.schema.type_adjacency_list(
-            generator.head_node_types, len(self.n_samples)
-        )
-        self.input_dims = generator.graph.node_feature_sizes()
-        self.multiplicity = generator.multiplicity
+        self.subtree_schema = generator.type_adjacency_list
+        #self.subtree_schema = generator.type_adjacency_list(
+        #    generator.head_node_types, len(self.n_samples))
 
     @staticmethod
     def _eval_neigh_tree_per_layer(input_tree):

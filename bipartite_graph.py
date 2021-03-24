@@ -109,11 +109,10 @@ class Graph(object):
         return num_edges
 
     @property
-    def num_user_features(self):
+    def node_feature_sizes(self):
         num_user_features = self.node_features['user'].shape[1]
-        return num_user_features
-
-    @property
-    def num_item_features(self):
         num_item_features = self.node_features['item'].shape[1]
-        return num_item_features
+        node_feature_sizes = {
+            'user': num_user_features, 'item': num_item_features}
+        return node_feature_sizes
+

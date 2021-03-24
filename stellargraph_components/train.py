@@ -5,13 +5,14 @@ from sklearn.model_selection import train_test_split
 import stellargraph as sg
 from stellargraph.mapper import HinSAGELinkGenerator
 from stellargraph.layer import link_regression
-from models import PairSAGE
 from tensorflow.keras import Model, optimizers, losses, metrics
 import tensorflow.keras.backend as K
 
 import multiprocessing
 from stellargraph import datasets
 import matplotlib.pyplot as plt
+
+from models import PairSAGE
 
 
 batch_size = 200
@@ -88,3 +89,7 @@ history = model.fit(
     workers=num_workers)
 
 sg.utils.plot_history(history)
+
+
+
+

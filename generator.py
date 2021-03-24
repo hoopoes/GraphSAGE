@@ -121,7 +121,7 @@ class Generator(abc.ABC):
         pass
 
 
-from exp2_sampler import Sampler
+from sampler import BreadthFirstWalker
 
 import operator
 import collections
@@ -239,6 +239,8 @@ class PairSAGEGenerator(BatchedLinkGenerator):
         seed=None
     ):
         super().__init__(Graph, batch_size)
+        self.graph = Graph
+        self.batch_size = batch_size
         self.num_samples = num_samples
         self.head_node_types = head_node_types    # ['user', 'item']
 
@@ -250,7 +252,7 @@ class PairSAGEGenerator(BatchedLinkGenerator):
               ('user', []), ('item', list(range(2, num_samples[0]+2, 1)))],
         ]
 
-        self.sampler = Sampler(Graph=Graph, num_of_walks=num_samples)
+        self.sampler = BreadthFirstWalker(Graph=Graph, num_of_walks=num_samples)
 
     def _get_features(self, node_samples, head_size):
         """
@@ -267,7 +269,7 @@ class PairSAGEGenerator(BatchedLinkGenerator):
         # Resize features to (batch_size, n_neighbours, feature_size)
         # for each node type (note that we can have different feature size for each node type)
         # G.node_features(['u_630'], 'user') -> (1, 24)
-        # 한 번에 한 node_type만 가능
+        # 한 번에 한 node_type 만 가능
         """
        batch_feats = [
             self.graph.node_features(layer_nodes, nt, use_ilocs=use_ilocs)
@@ -339,15 +341,15 @@ class PairSAGEGenerator(BatchedLinkGenerator):
 
         return batch_feats
 
-gen = PairSAGEGenerator(graph, 2, [4,2], ['user', 'item'])
-train = gen.flow(train_edge, train_label, shuffle=True)
-print(train.batch_size, train.data_size, train.ids, train.indices, train.targets)
+    @property
+    def type_adjacency_list(self):
+        type_adjacency_list = [
+            ('user', [2]), ('item', [3]), ('item', [4]), ('user', [5]),
+            ('user', []), ('item', [])
+        ]
+        return type_adjacency_list
 
-inputs = next(iter(train))
 
-print([inputs[0][i].shape for i in range(len(inputs[0]))])
-# [(2, 1, 1),    (2, 1, 2),    (2, 4, 2),    (2, 4, 1),    (2, 8, 1),    (2, 8, 2)]
-# [(200, 1, 24), (200, 1, 19), (200, 4, 19), (200, 4, 24), (200, 8, 24), (200, 8, 19)]
 
 """
 nodes_by_type interlace 하기 전에
