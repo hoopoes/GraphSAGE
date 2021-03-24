@@ -22,9 +22,11 @@ class Graph(object):
         self.node_features = node_features
         self.edges = edges
         self.node_dict = node_dict
+        self.node_type_dict_id, self.node_type_dict_index = self.get_node_type_dict()
 
         self.reverse_node_dict = {val: key for key, val in node_dict.items()}
         self.neighbor_dict_id, self.neighbor_dict_index = self.get_neighbor_dict()
+        self.existing_node = list(node_dict.keys())
 
         if not isinstance(node_features, Dict):
             raise TypeError("node features must be python dictionary")
@@ -36,6 +38,11 @@ class Graph(object):
 
     def __contains__(self, value):
         return value in self.node_dict.keys()
+
+    def get_node_type_dict(self):
+        node_type_dict_id = {key: key.split('_')[0] for key in self.node_dict.keys()}
+        node_type_dict_index = {self.node_dict[key]: key.split('_')[0] for key in self.node_dict.keys()}
+        return node_type_dict_id, node_type_dict_index
 
     def get_neighbor_dict(self):
         node_ids = sorted(list(set(self.edges[0])))
@@ -59,23 +66,13 @@ class Graph(object):
             neighbors = self.neighbor_dict_id[node]
         return neighbors
 
-    def get_node_type(self, nodes: Union[int, str]) -> list:
-        # Base Input: ['user_1']
-        if not isinstance(nodes, list):
-            nodes = [nodes]
-        if type(nodes[0]) == str:
-            self.check_node_existence(nodes)
-            node_types = [node.split('_')[0] for node in nodes]
+    def get_node_type(self, node: Union[int, str]):
+        if type(node) == int:
+            node = self.reverse_node_dict[node]
+            node_type = self.node_type_dict_id[node]
         else:
-            nodes = [self.reverse_node_dict[node] for node in nodes]
-            self.check_node_existence(nodes)
-            node_types = [node.split('_')[0] for node in nodes]
-        return node_types
-
-    def check_node_existence(self, nodes: list):
-        existing_nodes = [node for node in nodes if node in list(self.node_dict.keys())]
-        if len(nodes) != len(existing_nodes):
-            raise KeyError("Some of nodes do not exist")
+            node_type = self.node_type_dict_id[node]
+        return node_type
 
     def get_node_features_from_node(self, nodes: list, node_type: str):
         correction_constant = self.node_features['user'].shape[0]
@@ -112,7 +109,6 @@ class Graph(object):
     def node_feature_sizes(self):
         num_user_features = self.node_features['user'].shape[1]
         num_item_features = self.node_features['item'].shape[1]
-        node_feature_sizes = {
-            'user': num_user_features, 'item': num_item_features}
+        node_feature_sizes = {'user': num_user_features, 'item': num_item_features}
         return node_feature_sizes
 

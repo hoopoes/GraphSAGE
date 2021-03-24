@@ -116,28 +116,30 @@ a = sorted(users['user'].unique())
 b = sorted(items['item'].unique())
 
 node_dict = {
-    user_id: user_index for user_id, user_index in zip(a, list(range(0, len(a), 1)))}
+    user_id: user_index for user_id, user_index
+    in zip(a, list(range(0, len(a), 1)))}
 add = {
-    item_id: item_index for item_id, item_index in zip(b, list(range(len(a), len(a)+len(b), 1)))}
+    item_id: item_index for item_id, item_index
+    in zip(b, list(range(len(a), len(a)+len(b), 1)))}
 node_dict.update(add)
+
 
 graph = Graph(node_features=node_features, edges=edges, node_dict=node_dict)
 
-# ---------
-edges_train, edges_test = train_test_split(rating, train_size=train_size, test_size=test_size)
+edges_train, edges_test = train_test_split(
+    rating, train_size=train_size, test_size=test_size)
 
 # user-item edge 리스트
 # 아래가 link_ids
 edgelist_train = list(edges_train[["user", "item"]].itertuples(index=False))
 edgelist_test = list(edges_test[["user", "item"]].itertuples(index=False))
-
 labels_train = edges_train["y"]
 labels_test = edges_test["y"]
 
-# generator
-num_samples = [8, 4]
 
+# ------
 # Data Generator: batch_size 200으로 설정함
+num_samples = [8, 4]
 generator = PairSAGEGenerator(
     graph, batch_size, num_samples, head_node_types=["user", "item"])
 
@@ -168,7 +170,7 @@ model.compile(
     metrics=[root_mean_square_error, metrics.mae],
 )
 
-num_workers = 4
+num_workers = -1
 epochs = 2
 
 #test_metrics = model.evaluate(
@@ -178,14 +180,13 @@ epochs = 2
 #for name, val in zip(model.metrics_names, test_metrics):
 #    print("\t{}: {:0.4f}".format(name, val))
 
-
 history = model.fit(
     train_gen,
     validation_data=test_gen,
-    epochs=epochs,
+    epochs=1,
     verbose=1,
     shuffle=False,
-    use_multiprocessing=False,
+    use_multiprocessing=True,
     workers=num_workers)
 
 sg.utils.plot_history(history)

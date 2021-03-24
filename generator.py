@@ -1,3 +1,5 @@
+# LinkSequence, BatchedLinkGenerator, PairSAGEGenerator
+
 import collections
 from collections.abc import Iterable
 import numpy as np
@@ -177,12 +179,12 @@ class BatchedLinkGenerator(Generator):
             # node 잘 있는지 확인
             src, dst = link
             try:
-                node_type_src = self.graph.get_node_type(src)[0]
+                node_type_src = self.graph.get_node_type(src)
             except KeyError:
                 raise KeyError(
                     f"Node ID {src} supplied to generator not found in graph")
             try:
-                node_type_dst = self.graph.get_node_type(dst)[0]
+                node_type_dst = self.graph.get_node_type(dst)
             except KeyError:
                 raise KeyError(
                     f"Node ID {dst} supplied to generator not found in graph"
@@ -212,24 +214,6 @@ class BatchedLinkGenerator(Generator):
 
 
 class PairSAGEGenerator(BatchedLinkGenerator):
-    """
-    At minimum, supply the StellarGraph, the batch size, and the number of
-    node samples for each layer of the GraphSAGE model.
-
-    Use the :meth:`flow` method supplying the nodes and (optionally) targets
-    to get an object that can be used as a Keras data generator.
-
-    The generator should be given the ``(src,dst)`` node types using
-
-    Args:
-        g (StellarGraph): A machine-learning ready graph.
-        batch_size (int): Size of batch of links to return.
-        num_samples (list): List of number of neighbour node samples per GraphSAGE layer (hop) to take.
-        head_node_types (list, optional): List of the types (str) of the two head nodes forming the
-            node pair. This does not need to be specified if ``G`` has only one node type.
-        seed (int or str, optional): Random seed for the sampling methods.
-    """
-
     def __init__(
         self,
         Graph,
@@ -238,6 +222,21 @@ class PairSAGEGenerator(BatchedLinkGenerator):
         head_node_types=None,
         seed=None
     ):
+        """
+        PairSAGE Batch Link Generator Object
+
+        Use the `flow` method supplying the nodes and (optionally) targets
+        to get an object that can be used as a Keras data generator.
+
+        The generator should be given the ``(src,dst)`` node types using
+
+        :param Graph: Graph Object suited for bipartite graph structure
+        :param batch_size (int)
+        :param num_samples (list): List of number of neighbor node sampler per GraphSAGE layer (hop) to take
+        :param head_node_types (list): List of the types of the two head nodes forming the node pair
+         For now, the only possible choice is as follows: ['user', 'item']
+        :param seed (int or str, optional): Random seed for the sampling methods
+        """
         super().__init__(Graph, batch_size)
         self.graph = Graph
         self.batch_size = batch_size
@@ -293,7 +292,7 @@ class PairSAGEGenerator(BatchedLinkGenerator):
 
         Args:
             head_links (list): An iterable of edges to perform sampling for.
-            batch_num (int): Batch number
+            batch_num (int): Batch number -> 이거 어디다 쓰냐?
 
         Returns:
             A list of the same length as `num_samples` of collected features from
@@ -309,7 +308,7 @@ class PairSAGEGenerator(BatchedLinkGenerator):
             # so we are extracting 2 head nodes per edge
             head_nodes = [e[ii] for e in head_links]
 
-            # Get sampled nodes for the subgraphs starting from the (src, dst) head nodes
+            # Get sampled nodes for the sub-graphs starting from the (src, dst) head nodes
             # nodes_samples is list of two lists: [[samples for src], [samples for dst]]
             # node_samples = self.sampler.run(nodes=head_nodes, n=1, n_size=self.num_samples)
             node_samples = self.sampler.run_breadth_first_walk(nodes=head_nodes)
