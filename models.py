@@ -2,16 +2,12 @@
 # PairSAGE: GraphSAGE Implementation for Bipartite User-Item pair graph
 # got helped from https://github.com/stellargraph/stellargraph
 
-import tensorflow as tf
-from tensorflow.keras.layers import Layer
-from tensorflow.keras import backend as K, Input
-from tensorflow.keras.layers import Lambda, Dropout, Reshape
-from tensorflow.keras.utils import Sequence
-from tensorflow.keras import activations, initializers, regularizers, constraints
-from typing import List, Callable, Tuple, Dict, Union, AnyStr
 import itertools as it
 import operator as op
-import warnings
+from typing import List, Callable, Tuple, Dict, Union, AnyStr
+
+from tensorflow.keras import backend as K, Input
+from tensorflow.keras.layers import Lambda, Dropout, Reshape
 
 from utils import Aggregator
 

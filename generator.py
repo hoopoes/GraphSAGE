@@ -1,11 +1,16 @@
 # LinkSequence, BatchedLinkGenerator, PairSAGEGenerator
-
+import abc
+import operator
 import collections
 from collections.abc import Iterable
+from functools import reduce
 import numpy as np
+from time import perf_counter
+
 from tensorflow.keras.utils import Sequence
 
 from utils import is_real_iterable, random_state
+from sampler_backup import BreadthFirstWalker
 
 # Sequence
 # Base object for fitting to a sequence of data, such as a dataset.
@@ -94,7 +99,9 @@ class LinkSequence(Sequence):
         batch_targets = None if self.targets is None else self.targets[batch_indices]
 
         # Get node features for batch of link ids
+        start = perf_counter()
         batch_feats = self._sample_features(head_ids, batch_num)
+        end = perf_counter() - start
 
         return batch_feats, batch_targets
 
@@ -106,9 +113,6 @@ class LinkSequence(Sequence):
 
 # ----------
 # Generator
-# stellagraph, pairsage generator
-
-import abc
 
 class Generator(abc.ABC):
     @abc.abstractmethod
@@ -122,12 +126,6 @@ class Generator(abc.ABC):
         # Create a Tensorflow Keras Sequence for GNN
         pass
 
-
-from sampler import BreadthFirstWalker
-
-import operator
-import collections
-from functools import reduce
 
 
 class BatchedLinkGenerator(Generator):
@@ -187,20 +185,18 @@ class BatchedLinkGenerator(Generator):
                 node_type_dst = self.graph.get_node_type(dst)
             except KeyError:
                 raise KeyError(
-                    f"Node ID {dst} supplied to generator not found in graph"
-                )
+                    f"Node ID {dst} supplied to generator not found in graph")
 
             if self.head_node_types is not None and (
                 node_type_src != expected_src_type
                 or node_type_dst != expected_dst_type
             ):
                 raise ValueError(
-                    f"Node pair ({src}, {dst}) not of expected type ({expected_src_type}, {expected_dst_type})"
-                )
+                    f"Node pair ({src}, {dst}) not of expected type ({expected_src_type}, {expected_dst_type})")
 
             # Pandas(user_id='user_0', movie_id='item_3') -> array([0, 41]) 로 변형
             # link_ids = [self.graph.node_ids_to_ilocs(ids) for ids in link_ids]
-            link_ids = [self.graph.change_id_to_index([id for id in link_id]) for link_id in link_ids]
+            link_ids = [self.graph.change_id_to_index(link_id) for link_id in link_ids]
             # [[0, 2], [0, 3], [0, 4], [1, 3], [1, 4]]
 
             return LinkSequence(
@@ -261,8 +257,7 @@ class PairSAGEGenerator(BatchedLinkGenerator):
             head_size: The number of head nodes (typically the batch size).
 
         Returns:
-            A list of numpy arrays that store the features for each head
-            node.
+            A list of numpy arrays that store the features for each head node.
         """
         # Note the if there are no samples for a node a zero array is returned.
         # Resize features to (batch_size, n_neighbours, feature_size)

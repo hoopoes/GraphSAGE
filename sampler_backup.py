@@ -49,7 +49,7 @@ class BreadthFirstWalker:
         num_of_walks = self.num_of_walks
 
         walks = []
-        # ex) nodes = ['user_0', 'user_31']
+        # ex) nodes = [0, 32] -> node_index
 
         for node in nodes:      # iterate over root nodes
             walk = []           # the list of nodes in the sub-graph of node
@@ -75,13 +75,31 @@ class BreadthFirstWalker:
 
                     # Neighbors might exist or not
                     if len(neighbors) > 0:
-                        samples = self.rs.choices(neighbors, k=num_of_walks[depth - 1])
-                        #samples = np.random.choice(
-                        #    neighbors, size=num_of_walks[depth-1], replace=True).tolist()
+                        index = self.graph.sampling_index_dict[current_node]
+                        #samples = neighbors[index: index+num_of_walks[depth-1]]
+
+                        L = len(neighbors)
+                        leftover = num_of_walks[depth-1]
+
+                        samples = []
+                        while L - index < leftover:
+                            samples.extend(neighbors[index:L])
+                            neighbors = np_rn.permutation(neighbors).tolist()
+                            leftover -= L - index
+                            self.graph.sampling_index_dict[current_node] = 0
+                            index = self.graph.sampling_index_dict[current_node]
+
+                        # index = self.graph.sampling_index_dict[current_node]
+                        samples.extend(neighbors[index: index+leftover])
+
+                        walk.append(samples)
+                        self.graph.sampling_index_dict[current_node] += leftover
+
+                        #samples = self.rs.choices(neighbors, k=num_of_walks[depth - 1])
                     else:
                         raise ValueError("Samples must exist. Self-node also can be a sample")
 
-                    walk.append(samples)
+                    #walk.append(samples)
                     queue.extend(
                         [
                             (sampled_node, self.graph.get_node_type(sampled_node), depth)
@@ -97,10 +115,25 @@ class BreadthFirstWalker:
 
 
 # Test
+"""
+num_of_walks = [8, 4]
+walker = BreadthFirstWalker(graph, num_of_walks=num_of_walks)
+
+from time import perf_counter
+
+nodes = list(graph.node_dict.keys())[0:9000]
+
+start = perf_counter()
+walks = walker.run_breadth_first_walk(nodes)
+end = perf_counter() - start
 
 
-
-
-
-
-
+a = []
+for node in nodes:
+    try:
+        neighbors = graph.get_neighbors_from_node(node)
+        if len(neighbors) < 8:
+            a.append((node, neighbors))
+    except:
+        pass
+"""

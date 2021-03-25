@@ -6,7 +6,6 @@ import tensorflow.keras.backend as K
 from tensorflow.keras import Model, optimizers, losses, metrics
 
 from bipartite_graph import Graph
-from sampler import BreadthFirstWalker
 from generator import PairSAGEGenerator
 from models import PairSAGE
 from stellargraph.layer import link_regression
@@ -14,9 +13,10 @@ from stellargraph.layer import link_regression
 import stellargraph as sg
 from stellargraph import datasets
 from sklearn.model_selection import train_test_split
+from time import perf_counter
 
 # Setting
-batch_size = 200
+batch_size = 100
 # Use 70% of edges for training, the rest for testing:
 train_size = 0.7
 test_size = 0.3
@@ -153,7 +153,7 @@ print([inputs[0][i].shape for i in range(len(inputs[0]))])
 # [(200, 1, 24), (200, 1, 19), (200, 4, 19), (200, 4, 24), (200, 8, 24), (200, 8, 19)]
 
 # models
-pairsage = PairSAGE(layer_sizes=[32, 32], generator=generator)
+pairsage = PairSAGE(layer_sizes=[16, 16], generator=generator)
 
 x_inp, x_out = pairsage.in_out_tensors()
 # x_out = [(None, 32), (None, 32)] - User, Item의 Embedding Matrix
@@ -171,7 +171,7 @@ model.compile(
 )
 
 num_workers = -1
-epochs = 2
+epochs = 1
 
 #test_metrics = model.evaluate(
 #    test_gen, verbose=1, use_multiprocessing=False, workers=num_workers)
@@ -183,13 +183,36 @@ epochs = 2
 history = model.fit(
     train_gen,
     validation_data=test_gen,
-    epochs=1,
+    epochs=epochs,
     verbose=1,
     shuffle=False,
     use_multiprocessing=True,
     workers=num_workers)
 
-sg.utils.plot_history(history)
+# sg.utils.plot_history(history)
+
+# ------
+nodes = list(graph.node_dict.values())[0]
+# graph.get_node_features_from_node(nodes, 'user')
+
+t = generator.flow(edgelist_train[0:2], labels_train[0:2], shuffle=True)
+
+inputs = next(iter(t))
+print([inputs[0][i].shape for i in range(len(inputs[0]))])
+
+history = model.fit(
+    t, epochs=1, verbose=1, shuffle=False, use_multiprocessing=True, workers=num_workers)
+
+
+start = perf_counter()
+for i in range(90):
+    out = next(iter(train_gen))
+end = perf_counter() - start
+print(end)
+
+
+
+
 
 
 

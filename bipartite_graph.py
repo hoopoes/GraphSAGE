@@ -27,6 +27,7 @@ class Graph(object):
         self.reverse_node_dict = {val: key for key, val in node_dict.items()}
         self.neighbor_dict_id, self.neighbor_dict_index = self.get_neighbor_dict()
         self.existing_node = list(node_dict.keys())
+        self.sampling_index_dict = self.get_sampling_index_dict()
 
         if not isinstance(node_features, Dict):
             raise TypeError("node features must be python dictionary")
@@ -38,6 +39,10 @@ class Graph(object):
 
     def __contains__(self, value):
         return value in self.node_dict.keys()
+
+    def get_sampling_index_dict(self):
+        sampling_index_dict = {node_id: 0 for node_id in self.node_dict.values()}
+        return sampling_index_dict
 
     def get_node_type_dict(self):
         node_type_dict_id = {key: key.split('_')[0] for key in self.node_dict.keys()}

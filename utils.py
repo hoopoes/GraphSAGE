@@ -1,6 +1,4 @@
-# Utility Functions for PairSAGE
-# PairSAGE: GraphSAGE Implementation for Bipartite User-Item pair graph
-# got helped from https://github.com/stellargraph/stellargraph
+# Utility Functions and Aggregator
 
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
@@ -9,9 +7,8 @@ from tensorflow.keras import activations
 
 import collections
 from collections import namedtuple
-from typing import List, Callable, Tuple, Dict, Union, AnyStr
+from typing import Callable, Union, AnyStr
 import random as rn
-import numpy as np
 import numpy.random as np_rn
 
 # 1) random_state, is_real_iterable
@@ -122,101 +119,3 @@ class Aggregator(Layer):
             (aggregated_vectors + self.bias) if self.has_bias else aggregated_vectors)
         return aggregated_vectors
 
-
-# used in defining StellarGraph
-def extract_element_features(element_data, unique, name, ids, type, use_ilocs):
-    if ids is None:
-        if type is None:
-            type = unique(
-                f"{name}_type: in a non-homogeneous graph, expected a {name} type and/or '{name}s' to be passed; found neither '{name}_type' nor '{name}s', and the graph has {name} types: %(found)s"
-            )
-
-        return element_data.features_of_type(type)
-
-    ids = np.asarray(ids)
-
-    if len(ids) == 0:
-        # empty lists are cast to a default array type of float64 -
-        # must manually specify integer type if empty, in which case we can pretend we received ilocs
-        ilocs = ids.astype(dtype=np.uint8)
-        use_ilocs = True
-    elif use_ilocs:
-        ilocs = ids
-    else:
-        ilocs = element_data.ids.to_iloc(ids)
-
-    valid = element_data.ids.is_valid(ilocs)
-    all_valid = valid.all()
-    valid_ilocs = ilocs if all_valid else ilocs[valid]
-
-    if type is None:
-        try:
-            # no inference required in a homogeneous-node graph
-            type = unique()
-        except ValueError:
-            # infer the type based on the valid nodes
-            types = np.unique(element_data.type_of_iloc(valid_ilocs))
-
-            if len(types) == 0:
-                raise ValueError(
-                    f"must have at least one node for inference, if `{name}_type` is not specified"
-                )
-            if len(types) > 1:
-                raise ValueError(f"all {name}s must have the same type")
-
-            type = types[0]
-
-    if all_valid:
-        return element_data.features(type, valid_ilocs)
-
-    # If there's some invalid values, they get replaced by zeros; this is designed to allow
-    # models that build fixed-size structures (e.g. GraphSAGE) based on neighbours to fill out
-    # missing neighbours with zeros automatically, using None as a sentinel.
-
-    # FIXME: None as a sentinel forces nodes to have dtype=object even with integer IDs, could
-    # instead use an impossible integer (e.g. 2**64 - 1)
-
-    # everything that's not the sentinel should be valid
-    if not use_ilocs:
-        non_nones = ids != None
-        element_data.ids.require_valid(ids[non_nones], ilocs[non_nones])
-
-    sampled = element_data.features(type, valid_ilocs)
-    features = np.zeros((len(ids), sampled.shape[1]))
-    features[valid] = sampled
-
-    return features
-
-
-# from stellargraph.core.validation import comma_sep, separated
-def separated(values, *, limit, stringify, sep):
-    """
-    Print up to ``limit`` values with a separator.
-
-    Args:
-        values (list): the values to print
-        limit (optional, int): the maximum number of values to print (None for no limit)
-        stringify (callable): a function to use to convert values to strings
-        sep (str): the separator to use between elements (and the "... (NNN more)" continuation)
-    """
-    count = len(values)
-    if limit is not None and count > limit:
-        values = values[:limit]
-        continuation = f"{sep}... ({count - limit} more)" if count > limit else ""
-    else:
-        continuation = ""
-
-    rendered = sep.join(stringify(x) for x in values)
-    return rendered + continuation
-
-
-def comma_sep(values, limit=20, stringify=repr):
-    """
-    Print up to ``limit`` values, comma separated.
-
-    Args:
-        values (list): the values to print
-        limit (optional, int): the maximum number of values to print (None for no limit)
-        stringify (callable): a function to use to convert values to strings
-    """
-    return separated(values, limit=limit, stringify=stringify, sep=", ")
