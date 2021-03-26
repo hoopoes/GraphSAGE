@@ -13,16 +13,18 @@ from utils import Aggregator
 
 
 class PairSAGE:
-    def __init__(
-        self,
-        layer_sizes,
-        generator=None,
-        agg_option='mean',
-        bias=True,
-        dropout=0.0,
-        normalize="l2",
-        activations=None
-    ):
+    def __init__(self, layer_sizes, generator=None,
+        agg_option='mean', bias=True, dropout=0.0, normalize="l2"):
+        """
+        Graph SAGE Model with User-Item Pair Settings
+
+        :param layer_sizes (list): hidden_size of layers
+        :param generator: PairSAGEGenerator object
+        :param agg_option (str): 'mean' or 'max'
+        :param bias (bool): Bias Option
+        :param dropout (float): Dropout Rate
+        :param normalize (String or None): Normalization Option
+        """
         # Aggregator & Normalization
         self._aggregator = Aggregator
         self.agg_option = agg_option
@@ -65,19 +67,15 @@ class PairSAGE:
         ]
 
         # Activation function for each layer
-        if activations is None:
-            activations = ["relu"] * (self.n_layers - 1) + ["linear"]
-        elif len(activations) != self.n_layers:
-            raise ValueError("Invalid number of activations; require one function per layer")
-        self.activations = activations
+        self.activations = ["relu"] * (self.n_layers - 1) + ["linear"]
 
         # Aggregator functions for each layer
         # output_dim: 32
-        # self.n_layers = 2, node_type은 user, movie 이렇게 2개 이므로
-        # --> Aggregator는 총 4개임
+        # self.n_layers = 2, node_type 은 user, item 이렇게 2개 이므로
+        # --> Aggregator 는 총 4개임
         # 아래에서 layer = 0, 1 두 경우 뿐임
-        # layer=0 -> self.dims[1].items() = [('user', 32), ('movie', 32)])
-        # layer=1 -> self.dims[2].items() = [('user', 32), ('movie', 32)])
+        # layer=0 -> self.dims[1].items() = [('user', 32), ('item', 32)])
+        # layer=1 -> self.dims[2].items() = [('user', 32), ('item', 32)])
         # 따라서 결국 output_dim = 32로 통일된다.
         self._aggs = [
             {
@@ -130,17 +128,13 @@ class PairSAGE:
     def __call__(self, xin: List):
         """
         Apply aggregator layers
-
-        Args:
-            x (list of Tensor): Batch input features
-
-        Returns:
-            Output tensor
+        Args: x (list of Tensor): Batch input features
+        Returns: Output tensor
         """
 
         def apply_layer(x: List, layer: int):
             """
-            Compute the list of output tensors for a single HinSAGE layer
+            Compute the list of output tensors for a single SAGE layer
 
             Args:
                 x (List[Tensor]): Inputs to the layer
@@ -148,14 +142,13 @@ class PairSAGE:
 
             Returns:
                 Outputs of applying the aggregators as a list of Tensors
-
             """
             layer_out = []
             for i, (node_type, neigh_indices) in enumerate(self.neigh_trees[layer]):
                 # The shape of the head node is used for reshaping the neighbour inputs
                 head_shape = K.int_shape(x[i])[1]
 
-                # Aplly dropout and reshape neighbours per node per layer
+                # Apply dropout and reshape neighbours per node per layer
                 neigh_list = [
                     Dropout(self.dropout)(
                         Reshape(
@@ -252,107 +245,4 @@ class PairSAGE:
         # Output from HinSAGE model
         x_out = self(x_inp)
         return x_inp, x_out
-
-
-
-"""
-Implementation of the GraphSAGE algorithm extended for heterogeneous graphs with Keras layers.
-
-To use this class as a Keras model, the features and graph should be supplied using the
-:class:`.HinSAGENodeGenerator` class for node inference models or the
-:class:`.HinSAGELinkGenerator` class for link inference models.  The `.in_out_tensors` method should
-be used to create a Keras model from the `GraphSAGE` object.
-
-Currently the class supports node or link prediction models which are built depending on whether
-a `HinSAGENodeGenerator` or `HinSAGELinkGenerator` object is specified.
-The models are built for a single node or link type. For example if you have nodes of types 'A' and 'B'
-you can build a link model for only a single pair of node types, for example ('A', 'B'), which should
-be specified in the `HinSAGELinkGenerator`.
-
-If you feed links into the model that do not have these node types (in correct order) an error will be
-raised.
-
-Examples:
-    Creating a two-level GrapSAGE node classification model on nodes of type 'A' with hidden node sizes of 8 and 4
-    and 10 neighbours sampled at each layer using an existing :class:`.StellarGraph` object `G`
-    containing the graph and node features::
-
-        generator = HinSAGENodeGenerator(
-            G, batch_size=50, num_samples=[10,10], head_node_type='A'
-            )
-        gat = HinSAGE(
-                layer_sizes=[8, 4],
-                activations=["relu","softmax"],
-                generator=generator,
-            )
-        x_inp, predictions = gat.in_out_tensors()
-
-    Creating a two-level GrapSAGE link classification model on nodes pairs of type ('A', 'B')
-    with hidden node sizes of 8 and 4 and 5 neighbours sampled at each layer::
-
-        generator = HinSAGELinkGenerator(
-            G, batch_size=50, num_samples=[5,5], head_node_types=('A','B')
-            )
-        gat = HinSAGE(
-                layer_sizes=[8, 4],
-                activations=["relu","softmax"],
-                generator=generator,
-            )
-        x_inp, predictions = gat.in_out_tensors()
-
-Note that passing a `NodeSequence` or `LinkSequence` object from the `generator.flow(...)` method
-as the `generator=` argument is now deprecated and the base generator object should be passed instead.
-
-.. seealso::
-
-   Examples using HinSAGE:
-
-   - `link prediction <https://stellargraph.readthedocs.io/en/stable/demos/link-prediction/hinsage-link-prediction.html>`__
-   - `unsupervised representation learning with Deep Graph Infomax <https://stellargraph.readthedocs.io/en/stable/demos/embeddings/deep-graph-infomax-embeddings.html>`__
-
-   Appropriate data generators: :class:`.HinSAGENodeGenerator`, :class:`.HinSAGELinkGenerator`.
-
-   Related models:
-
-   - :class:`.GraphSAGE` for homogeneous graphs
-   - :class:`.DirectedGraphSAGE` for homogeneous directed graphs
-   - :class:`.DeepGraphInfomax` for unsupervised training
-
-   Aggregators: :class:`.MeanHinAggregator`.
-
-   The `Heterogeneous GraphSAGE (HinSAGE) <https://stellargraph.readthedocs.io/en/stable/hinsage.html>`__ explanatory document has more theoretical details.
-
-Args:
-    layer_sizes (list): Hidden feature dimensions for each layer
-    generator (HinSAGENodeGenerator or HinSAGELinkGenerator):
-        If specified, required model arguments such as the number of samples
-        will be taken from the generator object. See note below.
-    aggregator (HinSAGEAggregator): The HinSAGE aggregator to use; defaults to the `MeanHinAggregator`.
-    bias (bool): If True (default), a bias vector is learnt for each layer.
-    dropout (float): The dropout supplied to each layer; defaults to no dropout.
-    normalize (str): The normalization used after each layer; defaults to L2 normalization.
-    activations (list): Activations applied to each layer's output;
-        defaults to ``['relu', ..., 'relu', 'linear']``.
-    kernel_initializer (str or func, optional): The initialiser to use for the weights of each layer.
-    kernel_regularizer (str or func, optional): The regulariser to use for the weights of each layer.
-    kernel_constraint (str or func, optional): The constraint to use for the weights of each layer.
-    bias_initializer (str or func, optional): The initialiser to use for the bias of each layer.
-    bias_regularizer (str or func, optional): The regulariser to use for the bias of each layer.
-    bias_constraint (str or func, optional): The constraint to use for the bias of each layer.
-    n_samples (list, optional): The number of samples per layer in the model.
-    input_neighbor_tree (list of tuple, optional): A list of (node_type, [children]) tuples that
-        specify the subtree to be created by the HinSAGE model.
-    input_dim (dict, optional): The input dimensions for each node type as a dictionary of the form
-        ``{node_type: feature_size}``.
-    multiplicity (int, optional): The number of nodes to process at a time. This is 1 for a node
-        inference and 2 for link inference (currently no others are supported).
-
-.. note::
-    The values for ``n_samples``, ``input_neighbor_tree``, ``input_dim``, and ``multiplicity`` are
-    obtained from the provided ``generator`` by default. The additional keyword arguments for these
-    parameters provide an alternative way to specify them if a generator cannot be supplied.
-"""
-
-
-
 

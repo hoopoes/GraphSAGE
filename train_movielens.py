@@ -139,13 +139,17 @@ labels_test = edges_test["y"]
 
 # ------
 # Data Generator: batch_size 200으로 설정함
+# generator: PairSAGE Generator
+# train_gen, test_gen: LinkSequence
 num_samples = [8, 4]
 generator = PairSAGEGenerator(
     graph, batch_size, num_samples, head_node_types=["user", "item"])
 
 # edge_list_train[0] = link_ids[0] = Pandas(user_id='u_630', movie_id='m_832')
-train_gen = generator.flow(edgelist_train, labels_train, shuffle=True)
-test_gen = generator.flow(edgelist_test, labels_test)
+train_gen = generator.flow(
+    link_ids=edgelist_train, targets=labels_train, shuffle=True)
+test_gen = generator.flow(
+    link_ids=edgelist_test, targets=labels_test)
 
 inputs = next(iter(train_gen))
 print([inputs[0][i].shape for i in range(len(inputs[0]))])
@@ -160,18 +164,17 @@ x_inp, x_out = pairsage.in_out_tensors()
 score_prediction = link_regression(edge_embedding_method="concat")(x_out)
 
 # Train
-def root_mean_square_error(s_true, s_pred):
-    return K.sqrt(K.mean(K.pow(s_true - s_pred, 2)))
+#def root_mean_square_error(s_true, s_pred):
+#    return K.sqrt(K.mean(K.pow(s_true - s_pred, 2)))
 
 model = Model(inputs=x_inp, outputs=score_prediction)
 model.compile(
     optimizer=optimizers.Adam(lr=1e-2),
     loss=losses.mean_squared_error,
-    metrics=[root_mean_square_error, metrics.mae],
-)
+    metrics=[metrics.RootMeanSquaredError()])
 
 num_workers = -1
-epochs = 1
+epochs = 3
 
 #test_metrics = model.evaluate(
 #    test_gen, verbose=1, use_multiprocessing=False, workers=num_workers)
