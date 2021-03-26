@@ -94,7 +94,9 @@ print(rating.shape)
 # 1 -> 0
 def correct_id(df, col):
     df[col] = df[col] - 1
-    df[col] = df[col].apply(lambda x: '_'.join([str(col), str(x)]))
+    # df[col] = df[col].apply(lambda x: '_'.join([str(col), str(x)]))
+    if col == 'item':
+        df[col] = df[col] + 6040
     return df
 
 users = correct_id(users, 'user')
@@ -115,6 +117,7 @@ edges = np.concatenate([edges, flipped_edges], axis=1)
 a = sorted(users['user'].unique())
 b = sorted(items['item'].unique())
 
+# 이제 의미 없음 빼자
 node_dict = {
     user_id: user_index for user_id, user_index
     in zip(a, list(range(0, len(a), 1)))}
@@ -128,6 +131,7 @@ graph = Graph(node_features=node_features, edges=edges, node_dict=node_dict)
 
 edges_train, edges_test = train_test_split(
     rating, train_size=train_size, test_size=test_size)
+
 
 # user-item edge 리스트
 # 아래가 link_ids
@@ -174,7 +178,7 @@ model.compile(
     metrics=[metrics.RootMeanSquaredError()])
 
 num_workers = -1
-epochs = 3
+epochs = 1
 
 #test_metrics = model.evaluate(
 #    test_gen, verbose=1, use_multiprocessing=False, workers=num_workers)
@@ -183,6 +187,7 @@ epochs = 3
 #for name, val in zip(model.metrics_names, test_metrics):
 #    print("\t{}: {:0.4f}".format(name, val))
 
+start = perf_counter()
 history = model.fit(
     train_gen,
     validation_data=test_gen,
@@ -191,6 +196,7 @@ history = model.fit(
     shuffle=False,
     use_multiprocessing=True,
     workers=num_workers)
+end = perf_counter() - start
 
 # sg.utils.plot_history(history)
 
@@ -203,15 +209,6 @@ t = generator.flow(edgelist_train[0:2], labels_train[0:2], shuffle=True)
 inputs = next(iter(t))
 print([inputs[0][i].shape for i in range(len(inputs[0]))])
 
-history = model.fit(
-    t, epochs=1, verbose=1, shuffle=False, use_multiprocessing=True, workers=num_workers)
-
-
-start = perf_counter()
-for i in range(90):
-    out = next(iter(train_gen))
-end = perf_counter() - start
-print(end)
 
 
 

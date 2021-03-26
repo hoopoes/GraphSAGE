@@ -195,8 +195,7 @@ class BatchedLinkGenerator(Generator):
 
             # 이걸 안하게 하면 되지 않나?
             # Pandas(user_id='user_0', movie_id='item_3') -> array([0, 41]) 로 변형
-            # link_ids = [self.graph.node_ids_to_ilocs(ids) for ids in link_ids]
-            link_ids = [self.graph.change_id_to_index(link_id) for link_id in link_ids]
+            # link_ids = [self.graph.change_id_to_index(link_id) for link_id in link_ids]
             # [[0, 2], [0, 3], [0, 4], [1, 3], [1, 4]]
 
             return LinkSequence(
@@ -262,13 +261,10 @@ class PairSAGEGenerator(BatchedLinkGenerator):
         # Note the if there are no samples for a node a zero array is returned.
         # Resize features to (batch_size, n_neighbours, feature_size)
         # for each node type (note that we can have different feature size for each node type)
-        # G.node_features(['u_630'], 'user') -> (1, 24)
         # 한 번에 한 node_type 만 가능
-        """
-       batch_feats = [
-            self.graph.node_features(layer_nodes, nt, use_ilocs=use_ilocs)
-            for nt, layer_nodes in node_samples]
-        """
+
+        # generator.get_node_features_from_node(['user_63'], 'user')
+        # len(batch_feats) = 6
         batch_feats = [
             self.graph.get_node_features_from_node(layer_nodes, node_type)
             for node_type, layer_nodes in node_samples
