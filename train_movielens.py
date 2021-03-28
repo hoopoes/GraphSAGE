@@ -1,5 +1,6 @@
 # Train Process
-
+import os, sys
+import itertools
 import numpy as np
 import pandas as pd
 import tensorflow.keras.backend as K
@@ -10,7 +11,6 @@ from generator import PairSAGEGenerator
 from models import PairSAGE
 from stellargraph.layer import link_regression
 
-import stellargraph as sg
 from stellargraph import datasets
 from sklearn.model_selection import train_test_split
 from time import perf_counter
@@ -22,20 +22,9 @@ train_size = 0.7
 test_size = 0.3
 
 # Movielens Dataset
-dataset = datasets.MovieLens()
-G, edges_with_ratings = dataset.load()
+# dataset = datasets.MovieLens()
+# G, edges_with_ratings = dataset.load()
 
-# 편집
-edges_with_ratings = edges_with_ratings.rename(
-    {'user_id': 'user', 'movie_id': 'item', 'rating': 'y'}, axis=1)
-edges_with_ratings['user'] = edges_with_ratings['user'].apply(
-    lambda x: '_'.join(['user', x.split('_')[1]]))
-edges_with_ratings['item'] = edges_with_ratings['item'].apply(
-    lambda x: '_'.join(['item', x.split('_')[1]]))
-
-# --------
-import os, sys
-import itertools
 
 # 1) Movie Lens data preprocessing
 base_path = os.path.join(os.getcwd(), 'data')
@@ -91,10 +80,20 @@ rating = rating.rename(
     {'user_id': 'user', 'movie_id': 'item', 'rating': 'y'}, axis=1)
 print(rating.shape)
 
+# id 전처리
+items['item'] = items['item'].apply(lambda x: '_'.join(['i', str(x)]))
+item_ids = sorted(list(items['item'].unique()))
+tmp = {item_ids[i]: i for i in range(len(item_ids))}
+items['item'] = items['item'].map(tmp)
+
+rating['item'] = rating['item'].apply(lambda x: '_'.join(['i', str(x)]))
+rating['item'] = rating['item'].map(tmp)
+
+users['user'] = users['user'] - 1
+rating['user'] = rating['user'] - 1
+
 # 1 -> 0
 def correct_id(df, col):
-    df[col] = df[col] - 1
-    # df[col] = df[col].apply(lambda x: '_'.join([str(col), str(x)]))
     if col == 'item':
         df[col] = df[col] + 6040
     return df
@@ -105,19 +104,24 @@ rating = correct_id(rating, 'user')
 rating = correct_id(rating, 'item')
 
 # Graph Input
+# TODO Padding?
 node_features = {
     'user': users.drop('user', axis=1).values,
     'item': items.drop('item', axis=1).values
 }
 
+# All users, items
+a = sorted(users['user'].unique())
+b = sorted(items['item'].unique())
+
 edges = rating[['user', 'item']].values.T
 flipped_edges = np.flip(edges, axis=0)
 edges = np.concatenate([edges, flipped_edges], axis=1)
 
-a = sorted(users['user'].unique())
-b = sorted(items['item'].unique())
+nodes = {'user': a, 'item': b}
 
-# 이제 의미 없음 빼자
+# TODO node_dict: 이제 의미 없음 빼자
+"""
 node_dict = {
     user_id: user_index for user_id, user_index
     in zip(a, list(range(0, len(a), 1)))}
@@ -125,9 +129,9 @@ add = {
     item_id: item_index for item_id, item_index
     in zip(b, list(range(len(a), len(a)+len(b), 1)))}
 node_dict.update(add)
+"""
 
-
-graph = Graph(node_features=node_features, edges=edges, node_dict=node_dict)
+graph = Graph(node_features=node_features, nodes=nodes, edges=edges)
 
 edges_train, edges_test = train_test_split(
     rating, train_size=train_size, test_size=test_size)
@@ -161,7 +165,7 @@ print([inputs[0][i].shape for i in range(len(inputs[0]))])
 # [(200, 1, 24), (200, 1, 19), (200, 4, 19), (200, 4, 24), (200, 8, 24), (200, 8, 19)]
 
 # models
-pairsage = PairSAGE(layer_sizes=[16, 16], generator=generator)
+pairsage = PairSAGE(layer_sizes=[32, 32], generator=generator)
 
 x_inp, x_out = pairsage.in_out_tensors()
 # x_out = [(None, 32), (None, 32)] - User, Item의 Embedding Matrix
@@ -187,7 +191,6 @@ epochs = 1
 #for name, val in zip(model.metrics_names, test_metrics):
 #    print("\t{}: {:0.4f}".format(name, val))
 
-start = perf_counter()
 history = model.fit(
     train_gen,
     validation_data=test_gen,
@@ -196,22 +199,8 @@ history = model.fit(
     shuffle=False,
     use_multiprocessing=True,
     workers=num_workers)
-end = perf_counter() - start
 
 # sg.utils.plot_history(history)
-
-# ------
-nodes = list(graph.node_dict.values())[0]
-# graph.get_node_features_from_node(nodes, 'user')
-
-t = generator.flow(edgelist_train[0:2], labels_train[0:2], shuffle=True)
-
-inputs = next(iter(t))
-print([inputs[0][i].shape for i in range(len(inputs[0]))])
-
-
-
-
 
 
 

@@ -248,11 +248,15 @@ class PairSAGEGenerator(BatchedLinkGenerator):
 
         self.sampler = BreadthFirstWalker(Graph=Graph, num_of_walks=num_samples)
 
-    def _get_features(self, node_samples, head_size):
+    def _get_features(self, nodes_by_type, head_size):
         """
         Collect features from sampled nodes.
         Args:
-            node_samples: A list of lists of node IDs
+            nodes_by_type: result of sample_features method.
+             this object must contain 6 tuples.
+             Ex) [('user', [0, 1]),
+                   ('item', [7000, 7001]),
+                   ('user', [3, 4, 5, 6, ...]), ...]
             head_size: The number of head nodes (typically the batch size).
 
         Returns:
@@ -267,7 +271,7 @@ class PairSAGEGenerator(BatchedLinkGenerator):
         # len(batch_feats) = 6
         batch_feats = [
             self.graph.get_node_features_from_node(layer_nodes, node_type)
-            for node_type, layer_nodes in node_samples
+            for node_type, layer_nodes in nodes_by_type
         ]
 
         # Resize features to (batch_size, n_neighbours, feature_size)
@@ -283,6 +287,7 @@ class PairSAGEGenerator(BatchedLinkGenerator):
 
         Args:
             head_links (list): An iterable of edges to perform sampling for.
+             --> link_ids
             batch_num (int): Batch number (LinkSequence 참조)
 
         Returns:

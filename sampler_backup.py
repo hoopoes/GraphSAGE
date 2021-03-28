@@ -126,14 +126,4 @@ nodes = list(graph.node_dict.keys())[0:9000]
 start = perf_counter()
 walks = walker.run_breadth_first_walk(nodes)
 end = perf_counter() - start
-
-
-a = []
-for node in nodes:
-    try:
-        neighbors = graph.get_neighbors_from_node(node)
-        if len(neighbors) < 8:
-            a.append((node, neighbors))
-    except:
-        pass
 """
