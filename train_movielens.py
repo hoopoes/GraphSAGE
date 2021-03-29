@@ -3,15 +3,13 @@ import os, sys
 import itertools
 import numpy as np
 import pandas as pd
-import tensorflow.keras.backend as K
 from tensorflow.keras import Model, optimizers, losses, metrics
 
 from bipartite_graph import Graph
 from generator import PairSAGEGenerator
 from models import PairSAGE
-from stellargraph.layer import link_regression
+from link_utils import link_classification
 
-from stellargraph import datasets
 from sklearn.model_selection import train_test_split
 from time import perf_counter
 
@@ -80,28 +78,47 @@ rating = rating.rename(
     {'user_id': 'user', 'movie_id': 'item', 'rating': 'y'}, axis=1)
 print(rating.shape)
 
+# Rating -> 0, 1
+def change_to_binary(x):
+    if x <= 2:
+        return 0
+    elif x >= 5:
+        return 1
+    else:
+        return -1
+
+rating['y'] = rating['y'].apply(lambda x: change_to_binary(x))
+rating = rating[rating['y'].isin([0, 1])].drop_duplicates()
+
+# 6014, 3232
+valid_users = list(rating[rating['y'] == 1]['user'].unique())
+valid_items = list(rating[rating['y'] == 1]['item'].unique())
+
+users = users[users['user'].isin(valid_users)]
+items = items[items['item'].isin(valid_items)]
+rating = rating[(rating['user'].isin(valid_users)) & (rating['item'].isin(valid_items))]
+
 # id 전처리
+users['user'] = users['user'].apply(lambda x: '_'.join(['u', str(x)]))
+user_ids = sorted(list(users['user'].unique()))
+new_user_ids = {user_ids[i]: i for i in range(len(user_ids))}
+users['user'] = users['user'].map(new_user_ids)
+
 items['item'] = items['item'].apply(lambda x: '_'.join(['i', str(x)]))
 item_ids = sorted(list(items['item'].unique()))
-tmp = {item_ids[i]: i for i in range(len(item_ids))}
-items['item'] = items['item'].map(tmp)
+new_item_ids = {item_ids[i]: i for i in range(len(item_ids))}
+items['item'] = items['item'].map(new_item_ids)
 
+rating['user'] = rating['user'].apply(lambda x: '_'.join(['u', str(x)]))
+rating['user'] = rating['user'].map(new_user_ids)
 rating['item'] = rating['item'].apply(lambda x: '_'.join(['i', str(x)]))
-rating['item'] = rating['item'].map(tmp)
+rating['item'] = rating['item'].map(new_item_ids)
 
-users['user'] = users['user'] - 1
-rating['user'] = rating['user'] - 1
 
-# 1 -> 0
-def correct_id(df, col):
-    if col == 'item':
-        df[col] = df[col] + 6040
-    return df
+max_user_index = rating['user'].max()
+items['item'] = items['item'] + max_user_index + 1
+rating['item'] = rating['item'] + max_user_index + 1
 
-users = correct_id(users, 'user')
-items = correct_id(items, 'item')
-rating = correct_id(rating, 'user')
-rating = correct_id(rating, 'item')
 
 # Graph Input
 # TODO Padding?
@@ -114,28 +131,20 @@ node_features = {
 a = sorted(users['user'].unique())
 b = sorted(items['item'].unique())
 
-edges = rating[['user', 'item']].values.T
+# Edges: only count 1 value
+edges = rating[rating['y'] == 1][['user', 'item']].drop_duplicates().values.T
 flipped_edges = np.flip(edges, axis=0)
 edges = np.concatenate([edges, flipped_edges], axis=1)
 
+# Nodes
 nodes = {'user': a, 'item': b}
 
-# TODO node_dict: 이제 의미 없음 빼자
-"""
-node_dict = {
-    user_id: user_index for user_id, user_index
-    in zip(a, list(range(0, len(a), 1)))}
-add = {
-    item_id: item_index for item_id, item_index
-    in zip(b, list(range(len(a), len(a)+len(b), 1)))}
-node_dict.update(add)
-"""
 
+# Graph Class 생성
 graph = Graph(node_features=node_features, nodes=nodes, edges=edges)
 
 edges_train, edges_test = train_test_split(
     rating, train_size=train_size, test_size=test_size)
-
 
 # user-item edge 리스트
 # 아래가 link_ids
@@ -169,27 +178,33 @@ pairsage = PairSAGE(layer_sizes=[32, 32], generator=generator)
 
 x_inp, x_out = pairsage.in_out_tensors()
 # x_out = [(None, 32), (None, 32)] - User, Item의 Embedding Matrix
-score_prediction = link_regression(edge_embedding_method="concat")(x_out)
+score_prediction = link_classification(edge_embedding_method="concat")(x_out)
 
 # Train
-#def root_mean_square_error(s_true, s_pred):
-#    return K.sqrt(K.mean(K.pow(s_true - s_pred, 2)))
 
 model = Model(inputs=x_inp, outputs=score_prediction)
 model.compile(
     optimizer=optimizers.Adam(lr=1e-2),
     loss=losses.mean_squared_error,
-    metrics=[metrics.RootMeanSquaredError()])
+    metrics=[metrics.RootMeanSquaredError(),
+             metrics.BinaryAccuracy(),
+             metrics.AUC()])
 
 num_workers = -1
 epochs = 1
 
+# Untrained Model Performance
 #test_metrics = model.evaluate(
 #    test_gen, verbose=1, use_multiprocessing=False, workers=num_workers)
 
 #print("Untrained model's Test Evaluation:")
 #for name, val in zip(model.metrics_names, test_metrics):
 #    print("\t{}: {:0.4f}".format(name, val))
+
+# Train
+print("Positive Value Ratio: {:.4f}".format(
+    list(rating.groupby('y')['y'].agg('size'))[1] / np.sum(list(
+        rating.groupby('y')['y'].agg('size')))))
 
 history = model.fit(
     train_gen,
@@ -199,11 +214,6 @@ history = model.fit(
     shuffle=False,
     use_multiprocessing=True,
     workers=num_workers)
-
-# sg.utils.plot_history(history)
-
-
-
 
 
 

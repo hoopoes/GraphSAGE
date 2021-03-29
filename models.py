@@ -236,7 +236,6 @@ class PairSAGE:
             tuple: ``(x_inp, x_out)``, where ``x_inp`` is a list of Keras input tensors
                 for the specified HinSAGE model (either node or link/node pair model) and ``x_out`` contains
                 model output tensor(s) of shape (batch_size, layer_sizes[-1]).
-
         """
 
         # Create tensor inputs

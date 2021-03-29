@@ -7,6 +7,7 @@ from collections.abc import Iterable
 from functools import reduce
 from time import perf_counter
 
+import tensorflow as tf
 from tensorflow.keras.utils import Sequence
 
 from utils import is_real_iterable, random_state
@@ -193,10 +194,8 @@ class BatchedLinkGenerator(Generator):
                 raise ValueError(
                     f"Node pair ({src}, {dst}) not of expected type ({expected_src_type}, {expected_dst_type})")
 
-            # 이걸 안하게 하면 되지 않나?
             # Pandas(user_id='user_0', movie_id='item_3') -> array([0, 41]) 로 변형
             # link_ids = [self.graph.change_id_to_index(link_id) for link_id in link_ids]
-            # [[0, 2], [0, 3], [0, 4], [1, 3], [1, 4]]
 
             return LinkSequence(
                 self.sample_features,
@@ -260,6 +259,7 @@ class PairSAGEGenerator(BatchedLinkGenerator):
             head_size: The number of head nodes (typically the batch size).
 
         Returns:
+            Tensors that store the features for each head node.
             A list of numpy arrays that store the features for each head node.
         """
         # Note the if there are no samples for a node a zero array is returned.
@@ -270,11 +270,21 @@ class PairSAGEGenerator(BatchedLinkGenerator):
         # generator.get_node_features_from_node(['user_63'], 'user')
         # len(batch_feats) = 6
         batch_feats = [
-            self.graph.get_node_features_from_node(layer_nodes, node_type)
+                self.graph.get_node_features_from_node(layer_nodes, node_type)
             for node_type, layer_nodes in nodes_by_type
         ]
 
+        """
+        batch_feats = [
+            tf.convert_to_tensor(
+                self.graph.get_node_features_from_node(layer_nodes, node_type),
+                dtype=tf.float32)
+            for node_type, layer_nodes in nodes_by_type
+        ]
+        """
+
         # Resize features to (batch_size, n_neighbours, feature_size)
+        # batch_feats = [tf.reshape(a, (head_size, -1, a.shape[1])) for a in batch_feats]
         batch_feats = [np.reshape(a, (head_size, -1, a.shape[1])) for a in batch_feats]
 
         return batch_feats
@@ -307,6 +317,7 @@ class PairSAGEGenerator(BatchedLinkGenerator):
             # Get sampled nodes for the sub-graphs starting from the (src, dst) head nodes
             # nodes_samples is list of two lists: [[samples for src], [samples for dst]]
             # node_samples = self.sampler.run(nodes=head_nodes, n=1, n_size=self.num_samples)
+            # TODO spark 로 sampler 를 구현한다고 하면 아래 줄이 바뀌면 된다.
             node_samples = self.sampler.run_breadth_first_walk(nodes=head_nodes)
 
             # Reshape node samples to the required format for the HinSAGE model
