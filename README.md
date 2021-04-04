@@ -1,4 +1,4 @@
-# PairSAGE
+# GraphSAGE Implementation with User-Item Setting  
 ----
 
 <center><img src="/image/main_img.JPG" width="70%"></center>  
@@ -15,28 +15,25 @@ Originally GraphSAGE is for homogenenous graph which has only one type node.
 When building a Recommendation System, we usually encounter the bipartite graph. This bipartite graph is composed of User-Item pair setting and each node has unique feature and characteristic.  
 So User node and Item node must be trained separately with different weight matrices.  
 
-**Pair** in PairSAGE is inserted to stress the importance of **Pair** relationship between User and Item.  
-This project can be used for common recommendation system. If features are diverse and new nodes are added frequently this project might be helpful to you.  
+This Algorithm has been implemented  to stress the importance of **Pair** relationship between User and Item.  
+This project can be used for common recommendation system. If features are diverse and new nodes are being added frequently, then this code might be helpful to you.  
+
+**Stellagraph** is a descent graph neural network library and has been really helpful to understand the process of GraphSAGE algorithm. However if you are only interested in Bipartite User-Item Recommendation, this library can be unnecesarily complex to you.  
+
+So I present you with simpler code which makes you do not have to import Stellargraph. Note that many modules are just same as Stellargraph but modified a little bit.  
 
 ----
 
 ## Structure  
-still developing...  
 
 **Base Components**  
-1) RandomWalk, UniformRandomWalk  
-2) GraphWalk, SampledHeterogeneousBreadthFirstWalk 
-3) UnsupervisedSampler  
-4) LinkSequence, OndemandLinkSequence  
-5) BatchedLinkGenerator, HinSAGELinkGenerator  
+1) Graph Object  
+2) Breadth First Walker  
+3) Bipartite Link Generator  
+4) GraphSAGE Model  
+
+**Relationship among Modules**  
 
 
-----
-
-## Tutorial  
-
-
-
-----
 
 

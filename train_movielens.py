@@ -11,7 +11,6 @@ from models import PairSAGE
 from link_utils import link_classification
 
 from sklearn.model_selection import train_test_split
-from time import perf_counter
 
 # Setting
 batch_size = 100
