@@ -2,19 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="71a0e547-4108-4707-97e8-b43f66f2d96f" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/graphsage.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/graphsage.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/algo.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/example1.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/example2.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/example3.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/torch_model.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/generator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/generator_backup.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_dummy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sampler.py" beforeDir="false" afterPath="$PROJECT_DIR$/sampler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sampler_backup.py" beforeDir="false" afterPath="$PROJECT_DIR$/sampler_backup.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train_movielens.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_movielens.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

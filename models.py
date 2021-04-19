@@ -1,5 +1,4 @@
-# PairSAGE Model
-# PairSAGE: GraphSAGE Implementation for Bipartite User-Item pair graph
+# GraphSAGE Implementation for Bipartite User-Item pair graph
 # got helped from https://github.com/stellargraph/stellargraph
 
 import itertools as it
@@ -12,11 +11,11 @@ from tensorflow.keras.layers import Lambda, Dropout, Reshape
 from utils import Aggregator
 
 
-class PairSAGE:
+class GraphSAGE:
     def __init__(self, layer_sizes, generator=None,
         agg_option='mean', bias=True, dropout=0.0, normalize="l2"):
         """
-        Graph SAGE Model with User-Item Pair Settings
+        Graph SAGE Model with User-Item Settings
 
         :param layer_sizes (list): hidden_size of layers
         :param generator: PairSAGEGenerator object
@@ -91,7 +90,7 @@ class PairSAGE:
         ]
 
     def __repr__(self):
-        identity = "<PairSAGE model with {} layers>".format(self.n_layers)
+        identity = "<GraphSAGE model with {} layers>".format(self.n_layers)
         return identity
 
     def _get_sizes_from_generator(self, generator):
@@ -122,7 +121,7 @@ class PairSAGE:
         return (
             [input_tree]
             if len(reduced) == 0
-            else [input_tree] + PairSAGE._eval_neigh_tree_per_layer(reduced)
+            else [input_tree] + GraphSAGE._eval_neigh_tree_per_layer(reduced)
         )
 
     def __call__(self, xin: List):

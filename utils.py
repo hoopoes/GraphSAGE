@@ -58,7 +58,7 @@ class Aggregator(Layer):
         super().__init__(**kwargs)
 
     def __repr__(self):
-        name = "Mean Aggregator with output_dim {}".format(self.output_dim)
+        name = "Aggregator with output_dim {}".format(self.output_dim)
         return name
 
     def build(self, input_shape):

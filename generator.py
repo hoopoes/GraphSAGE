@@ -1,4 +1,4 @@
-# LinkSequence, BatchedLinkGenerator, PairSAGEGenerator
+# LinkSequence, BatchedLinkGenerator, GraphSAGEGenerator
 import abc
 import operator
 import numpy as np
@@ -6,11 +6,10 @@ import collections
 from collections.abc import Iterable
 from functools import reduce
 
-import tensorflow as tf
 from tensorflow.keras.utils import Sequence
 
 from utils import is_real_iterable, random_state
-from sampler_backup import BreadthFirstWalker
+from sampler import BreadthFirstWalker
 
 # Sequence
 # Base object for fitting to a sequence of data, such as a dataset.
@@ -206,7 +205,7 @@ class BatchedLinkGenerator(Generator):
 
 
 
-class PairSAGEGenerator(BatchedLinkGenerator):
+class GraphSAGEGenerator(BatchedLinkGenerator):
     def __init__(
         self,
         Graph,
@@ -216,7 +215,7 @@ class PairSAGEGenerator(BatchedLinkGenerator):
         seed=None
     ):
         """
-        PairSAGE Batch Link Generator Object
+        Graph SAGE Batch Link Generator Object
 
         Use the `flow` method supplying the nodes and (optionally) targets
         to get an object that can be used as a Keras data generator.
@@ -273,17 +272,8 @@ class PairSAGEGenerator(BatchedLinkGenerator):
             for node_type, layer_nodes in nodes_by_type
         ]
 
-        """
-        batch_feats = [
-            tf.convert_to_tensor(
-                self.graph.get_node_features_from_node(layer_nodes, node_type),
-                dtype=tf.float32)
-            for node_type, layer_nodes in nodes_by_type
-        ]
-        """
 
         # Resize features to (batch_size, n_neighbours, feature_size)
-        # batch_feats = [tf.reshape(a, (head_size, -1, a.shape[1])) for a in batch_feats]
         batch_feats = [np.reshape(a, (head_size, -1, a.shape[1])) for a in batch_feats]
 
         return batch_feats
@@ -316,7 +306,6 @@ class PairSAGEGenerator(BatchedLinkGenerator):
             # Get sampled nodes for the sub-graphs starting from the (src, dst) head nodes
             # nodes_samples is list of two lists: [[samples for src], [samples for dst]]
             # node_samples = self.sampler.run(nodes=head_nodes, n=1, n_size=self.num_samples)
-            # TODO spark 로 sampler 를 구현한다고 하면 아래 줄이 바뀌면 된다.
             node_samples = self.sampler.run_breadth_first_walk(nodes=head_nodes)
 
             # Reshape node samples to the required format for the HinSAGE model

@@ -113,17 +113,3 @@ class BreadthFirstWalker:
 
         return walks
 
-
-# Test
-"""
-num_of_walks = [8, 4]
-walker = BreadthFirstWalker(graph, num_of_walks=num_of_walks)
-
-from time import perf_counter
-
-nodes = list(graph.node_dict.keys())[0:9000]
-
-start = perf_counter()
-walks = walker.run_breadth_first_walk(nodes)
-end = perf_counter() - start
-"""

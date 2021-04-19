@@ -6,8 +6,8 @@ import pandas as pd
 from tensorflow.keras import Model, optimizers, losses, metrics
 
 from bipartite_graph import Graph
-from generator import PairSAGEGenerator
-from models import PairSAGE
+from generator import GraphSAGEGenerator
+from models import GraphSAGE
 from link_utils import link_classification
 
 from sklearn.model_selection import train_test_split
@@ -18,12 +18,9 @@ batch_size = 100
 train_size = 0.7
 test_size = 0.3
 
+# 1. Pre-process
+
 # Movielens Dataset
-# dataset = datasets.MovieLens()
-# G, edges_with_ratings = dataset.load()
-
-
-# 1) Movie Lens data preprocessing
 base_path = os.path.join(os.getcwd(), 'data')
 user_path = os.path.join(base_path, 'users.dat')
 item_path = os.path.join(base_path, 'movies.dat')
@@ -52,7 +49,7 @@ def movie_preprocessing(movie):
     movie = movie.drop('tag', 1)
     return movie
 
-# user, item preprocess
+# user, item
 items = pd.read_table(item_path, sep='::', names=['movie_id', 'movie_name', 'tag'], engine='python')
 items = movie_preprocessing(items)
 items = items.drop('movie_name', axis=1)
@@ -89,7 +86,6 @@ def change_to_binary(x):
 rating['y'] = rating['y'].apply(lambda x: change_to_binary(x))
 rating = rating[rating['y'].isin([0, 1])].drop_duplicates()
 
-# 6014, 3232
 valid_users = list(rating[rating['y'] == 1]['user'].unique())
 valid_items = list(rating[rating['y'] == 1]['item'].unique())
 
@@ -97,7 +93,8 @@ users = users[users['user'].isin(valid_users)]
 items = items[items['item'].isin(valid_items)]
 rating = rating[(rating['user'].isin(valid_users)) & (rating['item'].isin(valid_items))]
 
-# id 전처리
+
+# id
 users['user'] = users['user'].apply(lambda x: '_'.join(['u', str(x)]))
 user_ids = sorted(list(users['user'].unique()))
 new_user_ids = {user_ids[i]: i for i in range(len(user_ids))}
@@ -119,8 +116,7 @@ items['item'] = items['item'] + max_user_index + 1
 rating['item'] = rating['item'] + max_user_index + 1
 
 
-# Graph Input
-# TODO Padding?
+# 2. Generate Graph Input
 node_features = {
     'user': users.drop('user', axis=1).values,
     'item': items.drop('item', axis=1).values
@@ -139,26 +135,27 @@ edges = np.concatenate([edges, flipped_edges], axis=1)
 nodes = {'user': a, 'item': b}
 
 
-# Graph Class 생성
+# Create Graph Class
 graph = Graph(node_features=node_features, nodes=nodes, edges=edges)
 
 edges_train, edges_test = train_test_split(
     rating, train_size=train_size, test_size=test_size)
 
-# user-item edge 리스트
-# 아래가 link_ids
+
+# user-item edge list
 edgelist_train = list(edges_train[["user", "item"]].itertuples(index=False))
 edgelist_test = list(edges_test[["user", "item"]].itertuples(index=False))
+
+# 아래가 link_ids
 labels_train = edges_train["y"]
 labels_test = edges_test["y"]
 
 
-# ------
-# Data Generator: batch_size 200으로 설정함
-# generator: PairSAGE Generator
+# Data Generator: batch_size 200
+# generator: GraphSAGE Generator
 # train_gen, test_gen: LinkSequence
 num_samples = [8, 4]
-generator = PairSAGEGenerator(
+generator = GraphSAGEGenerator(
     graph, batch_size, num_samples, head_node_types=["user", "item"])
 
 # edge_list_train[0] = link_ids[0] = Pandas(user_id='u_630', movie_id='m_832')
@@ -172,15 +169,17 @@ print([inputs[0][i].shape for i in range(len(inputs[0]))])
 # [(2, 1, 1),    (2, 1, 2),    (2, 4, 2),    (2, 4, 1),    (2, 8, 1),    (2, 8, 2)]
 # [(200, 1, 24), (200, 1, 19), (200, 4, 19), (200, 4, 24), (200, 8, 24), (200, 8, 19)]
 
-# models
-pairsage = PairSAGE(layer_sizes=[32, 32], generator=generator)
 
-x_inp, x_out = pairsage.in_out_tensors()
-# x_out = [(None, 32), (None, 32)] - User, Item의 Embedding Matrix
+# 3. Train
+# models
+graphsage = GraphSAGE(layer_sizes=[32, 32], generator=generator)
+
+x_inp, x_out = graphsage.in_out_tensors()
+# x_out = [(None, 32), (None, 32)] - User, Item's Embedding Matrix
 score_prediction = link_classification(edge_embedding_method="concat")(x_out)
 
-# Train
 
+# Define Model
 model = Model(inputs=x_inp, outputs=score_prediction)
 model.compile(
     optimizer=optimizers.Adam(lr=1e-2),
@@ -192,13 +191,6 @@ model.compile(
 num_workers = -1
 epochs = 1
 
-# Untrained Model Performance
-#test_metrics = model.evaluate(
-#    test_gen, verbose=1, use_multiprocessing=False, workers=num_workers)
-
-#print("Untrained model's Test Evaluation:")
-#for name, val in zip(model.metrics_names, test_metrics):
-#    print("\t{}: {:0.4f}".format(name, val))
 
 # Train
 print("Positive Value Ratio: {:.4f}".format(
@@ -213,6 +205,5 @@ history = model.fit(
     shuffle=False,
     use_multiprocessing=True,
     workers=num_workers)
-
 
 
