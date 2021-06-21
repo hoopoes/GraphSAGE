@@ -11,7 +11,7 @@ Paper Review Article written in Korean: [Review Article](https://greeksharifa.gi
 본 코드는 GraphSAGE 알고리즘을 Tensorflow로 구현한 코드이다.
 
 GraphSAGE 논문 원본은 1개의 Node Type을 가진 Homogenous Graph에 대해서만 설명하고 있다.  
-그런데 추천 시스템에서는 일반적으로 User-Item 설정을 두기 때문에, 우리는 Bipartite, 즉 이분 그래프 구조가 필요하다.  
+그런데 추천 시스템에서는 일반적으로 User-Item 설정을 두기 때문에, 우리에게는 Bipartite, 즉 이분 그래프 구조가 필요하다.  
 
 그리고 이러한 설정에서는 보통 User와 Item은 전혀 다른 Feature를 갖게 된다.  
 따라서 User와 Item은 다른 Weight Matrices에 의해 분리되어 학습되어야 한다.  
