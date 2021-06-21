@@ -3,37 +3,21 @@
 
 <center><img src="/image/main_img.JPG" width="70%"></center>  
 
-## Overview  
-Author: Youyoung Jang  
-Base Algorithm: GraphSAGE  
+## Explanation  
 Base Github: [Stellargraph](https://github.com/stellargraph/stellargraph)  
 Original Paper: [GraphSAGE Paper](https://arxiv.org/abs/1706.02216)  
 Paper Review Article written in Korean: [Review Article](https://greeksharifa.github.io/machine_learning/2020/12/31/Graph-Sage/)  
 
-This Algorithm is based on GraphSAGE Algorithm.  
-Originally GraphSAGE is for homogenenous graph which has only one type node.  
-When building a Recommendation System, we usually encounter the bipartite graph. This bipartite graph is composed of User-Item pair setting and each node has unique feature and characteristic.  
-So User node and Item node must be trained separately with different weight matrices.  
+본 코드는 GraphSAGE 알고리즘을 Tensorflow로 구현한 코드이다.
 
-This Algorithm has been implemented  to stress the importance of **Pair** relationship between User and Item.  
-This project can be used for common recommendation system. If features are diverse and new nodes are being added frequently, then this code might be helpful to you.  
+GraphSAGE 논문 원본은 1개의 Node Type을 가진 Homogenous Graph에 대해서만 설명하고 있다.  
+그런데 추천 시스템에서는 일반적으로 User-Item 설정을 두기 때문에, 우리는 Bipartite, 즉 이분 그래프 구조가 필요하다.  
 
-**Stellagraph** is a descent graph neural network library and has been really helpful to understand the process of GraphSAGE algorithm. However if you are only interested in Bipartite User-Item Recommendation, this library can be unnecesarily complex to you.  
+그리고 이러한 설정에서는 보통 User와 Item은 전혀 다른 Feature를 갖게 된다.  
+따라서 User와 Item은 다른 Weight Matrices에 의해 분리되어 학습되어야 한다.  
 
-So I present you with simpler code which makes you do not have to import Stellargraph. Note that many modules are just same as Stellargraph but modified a little bit.  
+본 Repository는 **Stellagraph**의 Component를 상당 부분 그대로 가져다 쓴 상태로 구현되어 있다.  
+다만 직접적으로 이 Library를 Import할 필요 없게 수정되어 있기 때문에, 기본적인 Bipartite GraphSAGE의 구조에 대해 쉽게 살펴볼 수 있는 코드라고 생각하면 될 것이다.  
 
-----
-
-## Structure  
-
-**Base Components**  
-1) Graph Object  
-2) Breadth First Walker  
-3) Bipartite Link Generator  
-4) GraphSAGE Model  
-
-**Relationship among Modules**  
-
-
-
+대용량의 Bipartite Graph 구조의 데이터에 기반한 GNN 추천 시스템은 [이 곳](https://github.com/ocasoyy/Bipartite-Graph-Isomorphism-Network)에서 구현하도록 할 것이다.  
 
